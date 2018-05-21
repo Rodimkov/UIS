@@ -10,6 +10,8 @@ import cv2
 import pickle
 import os
 import face_recognition
+
+
 def load_svm(name):
     predictor = cv2.ml.SVM_load(name + 'svm.xml')
     return predictor
@@ -44,6 +46,7 @@ def feature_extract(gray, bow_extr,detector):
     return bow_extr.compute(gray, kp)    
 
 
+flag = True
 test = 'photo'
 
 datasave = "resultmodel"
@@ -77,32 +80,38 @@ for i in paths:
     predictor.append(load_svm(datasave+"/" + i + '/'))
   
     
-
-while(True):
-    my_file = open("communication.txt", 'r')
-    my_string = my_file.read()
-    my_file.close()
-    if(my_string == 'start'):
-        break
-
-imgrec = cv2.imread("photo/you.jpg")
-small_frame = cv2.resize(imgrec, (0, 0), fx=0.25, fy=0.25) # надо ли и как именно
-rgb_small_frame = small_frame[:, :, ::-1]
-
-face_locations = face_recognition.face_locations(rgb_small_frame)
-
-face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-
-for face_encoding in face_encodings:
-    matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-    result = 2
-    if True in matches:
-        result = 1
+while(flag):
     
-for i in range(len(paths)):          
-    bow_extract.setVocabulary(vocabulary[i]) # хм а он очищается?
-    _,r = predictor[i].predict(feature_extract(img,bow_extract,detector))
-    result += r[0]
+    while(True):
+        my_file = open("communication.txt", 'r')
+        my_string = my_file.read()
+        my_file.close()
+        if(my_string == 'start'):
+            break
+        if(my_string == 'close'):
+            flag = False
+            break
+        
+    if(flag):
     
-    
-print(result/3)
+        imgrec = cv2.imread("photo/you.jpg")
+        small_frame = cv2.resize(imgrec, (0, 0), fx=0.25, fy=0.25) # надо ли и как именно
+        rgb_small_frame = small_frame[:, :, ::-1]
+        
+        face_locations = face_recognition.face_locations(rgb_small_frame)
+        
+        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+        
+        for face_encoding in face_encodings:
+            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+            result = 2
+            if True in matches:
+                result = 1
+            
+        for i in range(len(paths)):          
+            bow_extract.setVocabulary(vocabulary[i]) # хм а он очищается?
+            _,r = predictor[i].predict(feature_extract(img,bow_extract,detector))
+            result += r[0]
+            
+            
+        print(result/3)
